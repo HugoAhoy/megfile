@@ -285,9 +285,14 @@ def test_fs_access(filesystem):
     assert fs.fs_access('folder', Access.WRITE) == True
     assert fs.fs_access('file', Access.READ) == True
     assert fs.fs_access('file', Access.WRITE) == True
-    os.chmod('./file', 0o000)
-    assert fs.fs_access('file', Access.READ) == False
-    assert fs.fs_access('file', Access.WRITE) == False
+    if os.name == 'posix' and os.geteuid() == 0:  # this means the user is root
+        os.chmod('./file', 0o000)
+        assert fs.fs_access('file', Access.READ) == True
+        assert fs.fs_access('file', Access.WRITE) == True
+    else:
+        os.chmod('./file', 0o000)
+        assert fs.fs_access('file', Access.READ) == False
+        assert fs.fs_access('file', Access.WRITE) == False
 
 
 def test_fs_exists(filesystem):
